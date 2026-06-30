@@ -188,6 +188,47 @@ void processarImpressao(FilaNormal *fn, FilaPrioritaria *fp)
 }
 
 // ==========================================
+// BUSCA DE TRABALHOS (NOVIDADE)
+// ==========================================
+void buscarTrabalho(FilaNormal *fn, FilaPrioritaria *fp, int id)
+{
+    // Busca na Fila Prioritária (Circular)
+    if (!filaPrioritariaVazia(fp))
+    {
+        No *atual = fp->inicio;
+        int pos = 1;
+        do
+        {
+            if (atual->dados.id == id)
+            {
+                printf(COR_AMARELA "\n[ENCONTRADO] Trabalho Prioritario (Posicao %d na fila)\n", pos);
+                printf("ID: #%d | Arquivo: %s | Paginas: %d\n" RESETAR_COR, atual->dados.id, atual->dados.nome_arquivo, atual->dados.qtd_paginas);
+                return;
+            }
+            pos++;
+            atual = atual->proximo;
+        } while (atual != fp->inicio);
+    }
+
+    // Busca na Fila Normal (Linear)
+    No *atual_N = fn->inicio;
+    int pos_N = 1;
+    while (atual_N != NULL)
+    {
+        if (atual_N->dados.id == id)
+        {
+            printf(COR_AZUL "\n[ENCONTRADO] Trabalho Normal (Posicao %d na fila)\n", pos_N);
+            printf("ID: #%d | Arquivo: %s | Paginas: %d\n" RESETAR_COR, atual_N->dados.id, atual_N->dados.nome_arquivo, atual_N->dados.qtd_paginas);
+            return;
+        }
+        pos_N++;
+        atual_N = atual_N->proximo;
+    }
+
+    printf(COR_VERMELHA "\n[ERRO] Trabalho ID #%d nao encontrado em nenhuma fila.\n" RESETAR_COR, id);
+}
+
+// ==========================================
 // LISTAGEM E ESTATÍSTICAS
 // ==========================================
 void listarFilas(FilaNormal *fn, FilaPrioritaria *fp)
@@ -301,7 +342,7 @@ void cancelarTrabalho(FilaNormal *fn, FilaPrioritaria *fp, int id)
 }
 
 // ==========================================
-// PERSISTÊNCIA (CSV)
+// PERSISTÊNCIA (CSV) E MEMÓRIA
 // ==========================================
 void salvarCSV(FilaNormal *fn, FilaPrioritaria *fp)
 {
@@ -338,7 +379,6 @@ int carregarCSV(FilaNormal *fn, FilaPrioritaria *fp)
     Trabalho t;
     int maior_id = 100;
 
-    // A flag "1" serve para adicionar de forma silenciosa (sem poluir o terminal ao iniciar)
     while (fscanf(arq, "%d;%[^;];%d;%c\n", &t.id, t.nome_arquivo, &t.qtd_paginas, &t.tipo) == 4)
     {
         if (t.id > maior_id)
@@ -347,6 +387,32 @@ int carregarCSV(FilaNormal *fn, FilaPrioritaria *fp)
     }
     fclose(arq);
     return maior_id;
+}
+
+void liberarMemoria(FilaNormal *fn, FilaPrioritaria *fp)
+{
+    // Limpa a fila normal
+    No *atual_N = fn->inicio;
+    while (atual_N != NULL)
+    {
+        No *temp = atual_N;
+        atual_N = atual_N->proximo;
+        free(temp);
+    }
+
+    // Limpa a fila circular
+    if (!filaPrioritariaVazia(fp))
+    {
+        No *atual_P = fp->inicio;
+        No *prox;
+        do
+        {
+            prox = atual_P->proximo;
+            free(atual_P);
+            atual_P = prox;
+        } while (atual_P != fp->inicio);
+    }
+    printf(COR_AMARELA "\n[MEMORIA] Toda a memoria alocada foi liberada com sucesso.\n" RESETAR_COR);
 }
 
 // ==========================================
@@ -368,9 +434,10 @@ int main()
         printf("1. Adicionar Trabalho (Enqueue)\n");
         printf("2. Imprimir Proximo (Dequeue c/ Prioridade)\n");
         printf("3. Status, Listagem e Relatorio\n");
-        printf("4. Cancelar Trabalho por ID\n");
-        printf("5. Limpar a Tela\n");
-        printf("6. Sair e Salvar\n");
+        printf("4. Buscar Trabalho por ID\n");
+        printf("5. Cancelar Trabalho por ID\n");
+        printf("6. Limpar a Tela\n");
+        printf("7. Sair e Salvar\n");
         printf("----------------------------------------\n");
         printf("Escolha uma opcao: ");
 
@@ -418,21 +485,27 @@ int main()
             listarFilas(&fila_normal, &fila_prioritaria);
             break;
         case 4:
+            printf("ID do trabalho para buscar: ");
+            scanf("%d", &id_busca);
+            buscarTrabalho(&fila_normal, &fila_prioritaria, id_busca);
+            break;
+        case 5:
             printf("ID do trabalho para cancelar: ");
             scanf("%d", &id_busca);
             cancelarTrabalho(&fila_normal, &fila_prioritaria, id_busca);
             break;
-        case 5:
+        case 6:
             system(LIMPAR_TELA);
             break;
-        case 6:
+        case 7:
             salvarCSV(&fila_normal, &fila_prioritaria);
-            printf("\nEncerrando e liberando memoria...\n");
+            liberarMemoria(&fila_normal, &fila_prioritaria);
+            printf("\nEncerrando o programa...\n");
             break;
         default:
             printf(COR_VERMELHA "\n[ERRO] Opcao invalida!\n" RESETAR_COR);
         }
-    } while (opcao != 6);
+    } while (opcao != 7);
 
     return 0;
 }
