@@ -2,15 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Configuração para permitir o uso da função sleep tanto no Windows quanto no Linux
-#ifdef _WIN32
-    #include <windows.h>
-    #define ESPERAR(segundos) Sleep(segundos * 1000) // Sleep no Windows usa milissegundos
-#else
-    #include <unistd.h>
-    #define ESPERAR(segundos) sleep(segundos)       // sleep no Linux usa segundos
-#endif
-
 // 1. ESTRUTURA DO NÓ (Representa um documento na fila)
 typedef struct Documento {
     int id;
