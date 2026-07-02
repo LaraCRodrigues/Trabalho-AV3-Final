@@ -12,7 +12,7 @@ Repositório contendo os projetos práticos desenvolvidos para a disciplina de E
 
 | Trabalho | Estrutura de Dados | Tema Aplicado |
 | :--- | :--- | :--- |
-| **Trabalho A** | Lista Linear Simples | [] |
+| **Trabalho A** | Lista Linear Simples | [Playlist de Musica] |
 | **Trabalho B** | Pilha Simples | [] |
 | **Trabalho C** | Fila Linear e Fila Circular | Simulador de Spool de Impressão Corporativo |
 
